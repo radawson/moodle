@@ -296,11 +296,13 @@ class grade_edit_tree {
             $parentcategories = array_merge($rowclasses, [$eid]);
             $emptyrow->attributes['class'] = 'spacer ' . implode(' ', $parentcategories);
             $emptyrow->attributes['data-hidden'] = 'false';
+            $emptyrow->attributes['aria-hidden'] = 'true';
 
             $headercell = new html_table_cell();
             $headercell->header = true;
             $headercell->scope = 'row';
             $headercell->attributes['class'] = 'cell column-rowspan rowspan';
+            $headercell->attributes['aria-hidden'] = 'true';
             $headercell->rowspan = $row_count;
             $emptyrow->cells[] = $headercell;
 
@@ -310,6 +312,7 @@ class grade_edit_tree {
             $endcell = new html_table_cell();
             $endcell->colspan = (19 - $level);
             $endcell->attributes['class'] = 'emptyrow colspan ' . $levelclass;
+            $endcell->attributes['aria-hidden'] = 'true';
 
             $returnrows[] = new html_table_row(array($endcell));
 
@@ -740,13 +743,11 @@ abstract class grade_edit_tree_column {
     public function get_category_cell($category, $levelclass, $params) {
         $cell = clone($this->categorycell);
         $cell->attributes['class'] .= ' ' . $levelclass;
-        $cell->attributes['text'] = '';
         return $cell;
     }
 
     public function get_item_cell($item, $params) {
         $cell = clone($this->itemcell);
-        $cell->attributes['text'] = '';
         if (isset($params['level'])) {
             $level = $params['level'] + (($item->itemtype == 'category' || $item->itemtype == 'course') ? 0 : 1);
             $cell->attributes['class'] .= ' level' . $level;
@@ -827,7 +828,7 @@ class grade_edit_tree_column_name extends grade_edit_tree_column {
             $masterlabel = $params['level'] === 1 ? get_string('all') : $params['name'];
             // Build the master checkbox.
             $mastercheckbox = new \core\output\checkbox_toggleall($togglegroup, true, [
-                'id' => $togglegroup,
+                'id' => 'select_category_' . $category->id,
                 'name' => $togglegroup,
                 'value' => 1,
                 'classes' => 'itemselect ignoredirty mr-2',
@@ -1062,29 +1063,33 @@ class grade_edit_tree_column_status extends grade_edit_tree_column {
         $element['object'] = $category;
         $categorycell->text = $gtree->set_grade_status_icons($element);
 
-        // Aggregation type.
-        $aggrstrings = grade_helper::get_aggregation_strings();
         $context = new stdClass();
-        $context->aggregation = $aggrstrings[$category->aggregation];
+        if ($category->grade_item->is_calculated()) {
+            $context->calculatedgrade = get_string('calculatedgrade', 'grades');
+        } else {
+            // Aggregation type.
+            $aggrstrings = grade_helper::get_aggregation_strings();
+            $context->aggregation = $aggrstrings[$category->aggregation];
 
-        // Include/exclude empty grades.
-        if ($category->aggregateonlygraded) {
-            $context->aggregateonlygraded = $category->aggregateonlygraded;
-        }
+            // Include/exclude empty grades.
+            if ($category->aggregateonlygraded) {
+                $context->aggregateonlygraded = $category->aggregateonlygraded;
+            }
 
-        // Aggregate outcomes.
-        if ($category->aggregateoutcomes) {
-            $context->aggregateoutcomes = $category->aggregateoutcomes;
-        }
+            // Aggregate outcomes.
+            if ($category->aggregateoutcomes) {
+                $context->aggregateoutcomes = $category->aggregateoutcomes;
+            }
 
-        // Drop the lowest.
-        if ($category->droplow) {
-            $context->droplow = $category->droplow;
-        }
+            // Drop the lowest.
+            if ($category->droplow) {
+                $context->droplow = $category->droplow;
+            }
 
-        // Keep the highest.
-        if ($category->keephigh) {
-            $context->keephigh = $category->keephigh;
+            // Keep the highest.
+            if ($category->keephigh) {
+                $context->keephigh = $category->keephigh;
+            }
         }
         $categorycell->text .= $OUTPUT->render_from_template('core_grades/category_settings', $context);
         return $categorycell;
@@ -1199,7 +1204,7 @@ class grade_edit_tree_column_select extends grade_edit_tree_column {
         }
         // Build the master checkbox.
         $mastercheckbox = new \core\output\checkbox_toggleall($togglegroup, true, [
-            'id' => $togglegroup,
+            'id' => 'select_category_' . $category->id,
             'name' => $togglegroup,
             'value' => 1,
             'classes' => 'itemselect ignoredirty',

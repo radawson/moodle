@@ -632,7 +632,6 @@
     }
 }
 
-
 .search-widget {
     .dropdown-menu {
         padding: 0.8rem 1.2rem;
@@ -677,4 +676,16 @@
             font-size: 90%;
         }
     }
+}
+
+#fitem_id_submitbutton {
+    padding-right: 2em;
+}
+
+.gradestatus {
+    padding-top: 10px;
+}
+
+.gradestatus .icon {
+    margin-right: 1rem;
 }

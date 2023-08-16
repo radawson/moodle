@@ -978,17 +978,19 @@ $functions = array(
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ),
     'core_grades_get_groups_for_search_widget' => [
-        'classname' => 'core_grades\external\get_groups_for_selector',
+        'classname' => 'core_group\external\get_groups_for_selector',
         'description' => '** DEPRECATED ** Please do not call this function any more. ' .
-            'Use core_grades_get_groups_for_selector instead. ' .
+            'Use core_group_get_groups_for_selector instead. ' .
             'Get the group/(s) for a course',
         'type' => 'read',
         'ajax' => true,
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
     'core_grades_get_groups_for_selector' => [
-        'classname' => 'core_grades\external\get_groups_for_selector',
-        'description' => 'Get the group/(s) for a course',
+        'classname' => 'core_group\external\get_groups_for_selector',
+        'description' => '** DEPRECATED ** Please do not call this function any more. ' .
+            'Use core_group_get_groups_for_selector instead. ' .
+            'Get the group/(s) for a course',
         'type' => 'read',
         'ajax' => true,
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
@@ -1143,6 +1145,13 @@ $functions = array(
         'type' => 'read',
         'capabilities' => 'moodle/course:managegroups'
     ),
+    'core_group_get_groups_for_selector' => [
+        'classname' => 'core_group\external\get_groups_for_selector',
+        'description' => 'Get the group/(s) for a course',
+        'type' => 'read',
+        'ajax' => true,
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
     'core_group_unassign_grouping' => array(
         'classname' => 'core_group_external',
         'methodname' => 'unassign_grouping',
@@ -2857,6 +2866,14 @@ $functions = array(
         'ajax'          => true,
         'capabilities'  => 'moodle/contentbank:manageowncontent',
     ],
+    'core_contentbank_copy_content' => [
+        'classname'     => 'core_contentbank\external\copy_content',
+        'classpath'     => '',
+        'description'   => 'Copy a content in the content bank.',
+        'type'          => 'write',
+        'ajax'          => 'true',
+        'capabilities'  => 'moodle/contentbank:copycontent, moodle/contentbank:copyanycontent',
+    ],
     'core_contentbank_set_content_visibility' => [
         'classname'     => 'core_contentbank\external\set_content_visibility',
         'classpath'     => '',
@@ -2925,6 +2942,12 @@ $functions = array(
     'core_reportbuilder_retrieve_report' => [
         'classname'   => 'core_reportbuilder\external\reports\retrieve',
         'description' => 'Retrieve custom report content',
+        'type'        => 'read',
+        'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'core_reportbuilder_retrieve_system_report' => [
+        'classname'   => 'core_reportbuilder\external\systemreports\retrieve',
+        'description' => 'Retrieve system report content',
         'type'        => 'read',
         'services'    => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],

@@ -69,7 +69,10 @@
                 }
             ]
         },
-        "modstealth": true
+        "visibility": {
+            "isInteractive": false,
+            "modhiddenfromstudents": true
+        }
     }
 }}
 {{#moveicon}} {{{moveicon}}} {{/moveicon}}
@@ -105,16 +108,16 @@
     {{! Group mode }}
     {{#groupmodeinfo}}
         <div class="activity-groupmode-info align-self-start mr-sm-2">
-            {{$ core_courseformat/local/content/cm/groupmode_info}}
-                {{> core_courseformat/local/content/cm/groupmode_info}}
-            {{/ core_courseformat/local/content/cm/groupmode_info}}
+            {{$ core_courseformat/local/content/cm/groupmode}}
+                {{> core_courseformat/local/content/cm/groupmode}}
+            {{/ core_courseformat/local/content/cm/groupmode}}
         </div>
     {{/groupmodeinfo}}
 
     {{! Completion }}
     {{#activityinfo}}
         {{#hascompletion}}
-            <div class="activity-info align-self-start mr-sm-2">
+            <div class="activity-completion align-self-start mr-sm-2">
                 {{$ core_courseformat/local/content/cm/activity_info}}
                     {{> core_courseformat/local/content/cm/activity_info}}
                 {{/ core_courseformat/local/content/cm/activity_info}}

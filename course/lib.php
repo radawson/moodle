@@ -1657,8 +1657,13 @@ function course_get_cm_edit_actions(cm_info $mod, $indent = -1, $sr = null) {
     $hasmanageactivities = has_capability('moodle/course:manageactivities', $modcontext);
 
     if (!isset($str)) {
-        $str = get_strings(array('delete', 'move', 'moveright', 'moveleft',
-            'editsettings', 'duplicate', 'modhide', 'makeavailable', 'makeunavailable', 'modshow'), 'moodle');
+        $str = get_strings(
+            [
+                'delete', 'move', 'moveright', 'moveleft', 'editsettings', 'duplicate', 'modhide',
+                'makeavailable', 'makeunavailable', 'modshow', 'modshowcmtitle', 'makeavailablecmtitle',
+            ],
+            'moodle'
+        );
         $str->assign         = get_string('assignroles', 'role');
         $str->groupsnone     = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsnone"));
         $str->groupsseparate = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsseparate"));
@@ -1785,6 +1790,8 @@ function course_get_cm_edit_actions(cm_info $mod, $indent = -1, $sr = null) {
                     'class' => 'editing_show',
                     'data-action' => ($usecomponents) ? 'cmShow' : 'show',
                     'data-id' => $mod->id,
+                    // Title is needed mostly for behat tests. Otherwise it will follow any link with "show".
+                    'title' => $str->modshowcmtitle,
                 ]
             );
         }
@@ -1819,6 +1826,8 @@ function course_get_cm_edit_actions(cm_info $mod, $indent = -1, $sr = null) {
                     'data-action' => $action,
                     'data-sectionreturn' => $sr,
                     'data-id' => $mod->id,
+                    // Title is needed mostly for behat tests. Otherwise it will follow any link with "make available".
+                    'title' => $str->makeavailablecmtitle,
                 ]
             );
         }
@@ -2313,17 +2322,24 @@ function create_course($data, $editoroptions = NULL) {
     if (isset($data->tags)) {
         core_tag_tag::set_item_tags('core', 'course', $course->id, context_course::instance($course->id), $data->tags);
     }
+    // Set up communication.
+    if (core_communication\api::is_available()) {
+        // Check for default provider config setting.
+        $defaultprovider = get_config('moodlecourse', 'coursecommunicationprovider');
+        $provider = (isset($data->selectedcommunication)) ? $data->selectedcommunication : $defaultprovider;
 
-    // Communication api implementation in course.
-    if (isset($data->selectedcommunication) && core_communication\api::is_available()) {
-        // Prepare the communication api date.
-        $courseimage = course_summary_exporter::get_course_image($course);
-        $communicationroomname = !empty($data->communicationroomname) ? $data->communicationroomname : $data->fullname;
-        $selectedcommunication = $data->selectedcommunication;
-
-        // Communication api call.
-        $communication = \core_communication\api::load_by_instance('core_course', 'coursecommunication', $course->id);
-        $communication->create_and_configure_room($selectedcommunication, $communicationroomname, $courseimage, $data);
+        if (!empty($provider)) {
+            // Prepare the communication api data.
+            $courseimage = course_get_courseimage($course);
+            $communicationroomname = !empty($data->communicationroomname) ? $data->communicationroomname : $data->fullname;
+            // Communication api call.
+            $communication = \core_communication\api::load_by_instance(
+                'core_course',
+                'coursecommunication',
+                $course->id
+            );
+            $communication->create_and_configure_room($provider, $communicationroomname, $courseimage, $data);
+        }
     }
 
     // Save custom fields if there are any of them in the form.
@@ -2454,13 +2470,15 @@ function update_course($data, $editoroptions = NULL) {
         $provider = 'none';
     }
 
+    // Attempt to get the communication provider if it wasn't provided in the data.
+    if (empty($provider) && core_communication\api::is_available()) {
+        $provider = \core_communication\api::load_by_instance('core_course', 'coursecommunication', $data->id)->get_provider();
+    }
+
     // Communication api call.
     if (!empty($provider) && core_communication\api::is_available()) {
         // Prepare the communication api data.
-        $courseimage = course_summary_exporter::get_course_image($data);
-        if (!$courseimage) {
-            $courseimage = null;
-        }
+        $courseimage = course_get_courseimage($data);
 
         // This nasty logic is here because of hide course doesn't pass anything in the data object.
         if (!empty($data->communicationroomname)) {
@@ -3846,7 +3864,7 @@ function core_course_drawer(): string {
     }
 
     // Show course index to users can access the course only.
-    if (!can_access_course($PAGE->course)) {
+    if (!can_access_course($PAGE->course, null, '', true)) {
         return '';
     }
 
@@ -3998,6 +4016,7 @@ function course_get_user_navigation_options($context, $course = null) {
         'participants' => false,
         'search' => false,
         'tags' => false,
+        'communication' => false,
     ];
 
     $options->blogs = !empty($CFG->enableblogs) &&
@@ -4067,6 +4086,10 @@ function course_get_user_navigation_options($context, $course = null) {
             }
         }
         $options->grades = $grades;
+    }
+
+    if (\core_communication\api::is_available()) {
+        $options->communication = has_capability('moodle/course:configurecoursecommunication', $context);
     }
 
     if (\core_competency\api::is_enabled()) {
@@ -5123,4 +5146,49 @@ function course_output_fragment_new_base_form($args) {
     ob_end_clean();
 
     return $o;
+}
+
+/**
+ * Get the current course image for the given course.
+ *
+ * @param \stdClass $course
+ * @return null|stored_file
+ */
+function course_get_courseimage(\stdClass $course): ?stored_file {
+    $courseinlist = new core_course_list_element($course);
+    foreach ($courseinlist->get_course_overviewfiles() as $file) {
+        if ($file->is_valid_image()) {
+            return $file;
+        }
+    }
+    return null;
+}
+
+/**
+ * Get course specific data for configuring a communication instance.
+ *
+ * @param integer $courseid The course id.
+ * @return array Returns course data, context and heading.
+ */
+function course_get_communication_instance_data(int $courseid): array {
+    // Do some checks and prepare instance specific data.
+    $course = get_course($courseid);
+    require_login($course);
+    $context = context_course::instance($course->id);
+    require_capability('moodle/course:configurecoursecommunication', $context);
+
+    $heading = $course->fullname;
+    $returnurl = new moodle_url('/course/view.php', ['id' => $courseid]);
+
+    return [$course, $context, $heading, $returnurl];
+}
+
+/**
+ * Update a course using communication configuration data.
+ *
+ * @param stdClass $data The data to update the course with.
+ */
+function course_update_communication_instance_data(stdClass $data): void {
+    $data->id = $data->instanceid; // For correct use in update_course.
+    update_course($data);
 }

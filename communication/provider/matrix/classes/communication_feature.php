@@ -83,10 +83,7 @@ class communication_feature implements
                     'external_ids' => []
                 ];
 
-                list($qualifiedmuid, $pureusername) = matrix_user_manager::set_qualified_matrix_user_id(
-                    $userid,
-                    $this->eventmanager->matrixhomeserverurl
-                );
+                $qualifiedmuid = matrix_user_manager::get_formatted_matrix_userid($user->username);
 
                 // First create user in matrix.
                 $response = $this->eventmanager->request($json)->put($this->eventmanager->get_create_user_endpoint($qualifiedmuid));
@@ -94,7 +91,7 @@ class communication_feature implements
 
                 if (!empty($matrixuserid = $response->name)) {
                     // Then create matrix user id in moodle.
-                    matrix_user_manager::add_user_matrix_id_to_moodle($userid, $pureusername);
+                    matrix_user_manager::set_matrix_userid_in_moodle($userid, $qualifiedmuid);
                     if ($this->add_registered_matrix_user_to_room($matrixuserid)) {
                         $addedmembers[] = $userid;
                     }
@@ -116,10 +113,7 @@ class communication_feature implements
         $addedmembers = [];
 
         foreach ($userids as $userid) {
-            $matrixuserid = matrix_user_manager::get_matrixid_from_moodle(
-                $userid,
-                $this->eventmanager->matrixhomeserverurl
-            );
+            $matrixuserid = matrix_user_manager::get_matrixid_from_moodle($userid);
 
             if ($matrixuserid && $this->check_user_exists($matrixuserid)) {
                 if ($this->add_registered_matrix_user_to_room($matrixuserid)) {
@@ -173,10 +167,7 @@ class communication_feature implements
 
         foreach ($userids as $userid) {
             // Check user is member of room first.
-            $matrixuserid = matrix_user_manager::get_matrixid_from_moodle(
-                $userid,
-                $this->eventmanager->matrixhomeserverurl
-            );
+            $matrixuserid = matrix_user_manager::get_matrixid_from_moodle($userid);
 
             // Check if user is the room admin and halt removal of this user.
             $matrixroomdata = $this->eventmanager->request()->get($this->eventmanager->get_room_info_endpoint());
@@ -304,7 +295,6 @@ class communication_feature implements
      * Update the room avatar when an instance image is added or updated.
      */
     public function update_room_avatar(): void {
-
         // Check if we have an avatar that needs to be synced.
         if (!$this->communication->is_avatar_synced()) {
 
@@ -313,7 +303,7 @@ class communication_feature implements
 
             // If avatar is set for the instance, upload to Matrix. Otherwise, leave null for unsetting.
             if (!empty($instanceimage)) {
-                $contenturi = $this->eventmanager->upload_matrix_content($instanceimage->get_content());
+                $contenturi = $this->eventmanager->upload_matrix_content($instanceimage);
             }
 
             $response = $this->eventmanager->request(['url' => $contenturi], [], false)->put(

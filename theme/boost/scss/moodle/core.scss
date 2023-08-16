@@ -370,6 +370,23 @@ img.resize {
 .action-menu {
     white-space: nowrap;
     display: inline;
+
+    .dropdown.downleft .dropdown-subpanel-content {
+        right: 0;
+        left: auto;
+    }
+
+    .dropdown-subpanel.content-displayed {
+        background-color: $gray-200;
+    }
+
+    .dropdown-subpanel-content {
+        max-width: $modal-sm;
+
+        a:focus {
+            outline: solid $primary;
+        }
+    }
 }
 
 .block img.resize {
@@ -2643,6 +2660,23 @@ input[disabled] {
     }
 }
 
+/*
+ * Helpers to show elements only when a parent element has focus or hover.
+ */
+
+// Add this class to the element to hide.
+.v-parent-focus {
+    opacity: 0;
+    visibility: hidden;
+}
+
+// Add this class to the parent element to control focus.
+.focus-control:focus-within .v-parent-focus,
+.focus-control:hover .v-parent-focus {
+    opacity: 1;
+    visibility: visible;
+}
+
 // Emoji picker.
 $picker-width: 350px !default;
 $picker-width-xs: 320px !default;
@@ -3042,11 +3076,20 @@ body.dragging {
     width: 9px;
 }
 
+.dir-rtl .dropleft .dropdown-toggle::before {
+    content: fa-content($fa-var-chevron-right);
+}
+
 .dropright .dropdown-toggle::after {
     border: 0;
     @extend .fa-solid;
     content: fa-content($fa-var-chevron-right);
 }
+
+.dir-rtl .dropright .dropdown-toggle::after {
+    content: fa-content($fa-var-chevron-left);
+}
+
 
 .dropup .dropdown-toggle::after {
     border: 0;
@@ -3170,5 +3213,39 @@ blockquote {
             font-size: $btn-font-size-sm;
             margin: 0;
         }
+    }
+}
+
+/* Combobox search dropdowns */
+.usersearchdropdown,
+.gradesearchdropdown,
+.groupsearchdropdown {
+    max-width: 350px;
+    .searchresultitemscontainer {
+        max-height: 170px;
+        overflow: auto;
+        /* stylelint-disable declaration-no-important */
+        img {
+            height: 48px !important;
+            width: 48px !important;
+        }
+    }
+}
+
+/* Choice list component. */
+.choicelist {
+    min-width: $modal-sm;
+}
+
+[data-region="fixed-drawer"] {
+    .choicelist {
+        min-width: calc(#{$modal-sm} - 25px);
+    }
+}
+
+@include media-breakpoint-down(xs) {
+    // Modal small are larger than xs breakpoint.
+    .choicelist {
+        min-width: calc(#{$modal-sm} - 25px);
     }
 }

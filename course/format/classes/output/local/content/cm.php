@@ -25,13 +25,9 @@
 namespace core_courseformat\output\local\content;
 
 use cm_info;
-use core\activity_dates;
 use core\output\named_templatable;
 use core_availability\info_module;
-use core_completion\cm_completion_details;
-use core_course\output\activity_information;
 use core_courseformat\base as course_format;
-use core_courseformat\output\activitybadge;
 use core_courseformat\output\local\courseformat_named_templatable;
 use renderable;
 use renderer_base;
@@ -69,6 +65,15 @@ class cm implements named_templatable, renderable {
     /** @var string the activity availability class name */
     protected $availabilityclass;
 
+    /** @var string the activity completion class name */
+    protected $completionclass;
+
+    /** @var string the activity visibility class name */
+    protected $visibilityclass;
+
+    /** @var string the activity groupmode badge class name */
+    protected $groupmodeclass;
+
     /**
      * Constructor.
      *
@@ -90,6 +95,9 @@ class cm implements named_templatable, renderable {
         $this->cmnameclass = $format->get_output_classname('content\\cm\\cmname');
         $this->controlmenuclass = $format->get_output_classname('content\\cm\\controlmenu');
         $this->availabilityclass = $format->get_output_classname('content\\cm\\availability');
+        $this->completionclass = $format->get_output_classname('content\\cm\\completion');
+        $this->visibilityclass = $format->get_output_classname('content\\cm\\visibility');
+        $this->groupmodeclass = $format->get_output_classname('content\\cm\\groupmode');
     }
 
     /**
@@ -120,13 +128,13 @@ class cm implements named_templatable, renderable {
         $haspartials['completion'] = $this->add_completion_data($data, $output);
         $haspartials['editor'] = $this->add_editor_data($data, $output);
         $haspartials['groupmode'] = $this->add_groupmode_data($data, $output);
+        $haspartials['visibility'] = $this->add_visibility_data($data, $output);
         $this->add_format_data($data, $haspartials, $output);
 
         // Calculated fields.
         if (!empty($data->url)) {
             $data->hasurl = true;
         }
-
         return $data;
     }
 
@@ -205,33 +213,13 @@ class cm implements named_templatable, renderable {
      * @return bool the module has completion information
      */
     protected function add_completion_data(stdClass &$data, renderer_base $output): bool {
-        global $USER;
-        $course = $this->mod->get_course();
-        // Fetch completion details.
-        $showcompletionconditions = $course->showcompletionconditions == COMPLETION_SHOW_CONDITIONS;
-        $completiondetails = cm_completion_details::get_instance($this->mod, $USER->id, $showcompletionconditions);
-
-        // Fetch activity dates.
-        $activitydates = [];
-        if ($course->showactivitydates) {
-            $activitydates = activity_dates::get_dates_for_module($this->mod, $USER->id);
+        $completion = new $this->completionclass($this->format, $this->section, $this->mod);
+        $templatedata = $completion->export_for_template($output);
+        if ($templatedata) {
+            $data->activityinfo = $templatedata;
+            return true;
         }
-
-        $activityinfodata = (object) ['hasdates' => false, 'hascompletion' => false];
-        // There are activity dates to be shown; or
-        // Completion info needs to be displayed
-        // * The activity tracks completion; AND
-        // * The showcompletionconditions setting is enabled OR an activity that tracks manual
-        // completion needs the manual completion button to be displayed on the course homepage.
-        $showcompletioninfo = $completiondetails->has_completion() && ($showcompletionconditions ||
-            (!$completiondetails->is_automatic() && $completiondetails->show_manual_completion()));
-        if ($showcompletioninfo || !empty($activitydates)) {
-            $activityinfo = new activity_information($this->mod, $completiondetails, $activitydates);
-            $activityinfodata = $activityinfo->export_for_template($output);
-        }
-
-        $data->activityinfo = $activityinfodata;
-        return $activityinfodata->hascompletion;
+        return false;
     }
 
     /**
@@ -314,32 +302,26 @@ class cm implements named_templatable, renderable {
      * @return bool the module has group mode information
      */
     protected function add_groupmode_data(stdClass &$data, renderer_base $output): bool {
-        if (!plugin_supports('mod', $this->mod->modname, FEATURE_GROUPS, false)) {
-            return false;
-        }
+        $groupmode = new $this->groupmodeclass($this->format, $this->section, $this->mod);
+        $data->groupmodeinfo = $groupmode->export_for_template($output);
+        return !empty($data->groupmodeinfo);
+    }
 
-        if (!has_capability('moodle/course:manageactivities', $this->mod->context)) {
-            return false;
+    /**
+     * Add visibility information to the data structure.
+     *
+     * @param stdClass $data the current cm data reference
+     * @param renderer_base $output typically, the renderer that's calling this function
+     * @return bool if the cm has visibility data
+     */
+    protected function add_visibility_data(stdClass &$data, renderer_base $output): bool {
+        $visibility = new $this->visibilityclass($this->format, $this->section, $this->mod);
+        $templatedata = $visibility->export_for_template($output);
+        if ($templatedata) {
+            $data->visibility = $templatedata;
+            return true;
         }
-
-        switch ($this->mod->effectivegroupmode) {
-            case SEPARATEGROUPS:
-                $groupicon = 'i/groups';
-                $groupalt = get_string('groupsseparate', 'group');
-                break;
-            case VISIBLEGROUPS:
-                $groupicon = 'i/groupv';
-                $groupalt = get_string('groupsvisible', 'group');
-                break;
-            default:
-                return false;
-        }
-
-        $data->groupmodeinfo = (object) [
-            'groupicon' => $groupicon,
-            'groupalt' => $groupalt,
-        ];
-        return true;
+        return false;
     }
 
     /**

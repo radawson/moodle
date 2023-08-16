@@ -46,7 +46,8 @@ Feature: We can understand the gradebook user report
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I press "Add category"
     And I set the field "Category name" to "Sub category"
-    And I press "Save changes"
+    And I click on "Save" "button" in the "New category" "dialogue"
+    And I wait until the page is ready
     And I click on "Move" "link" in the "Test assignment six" "table_row"
     # This xpath finds the forth last row in the table.
     And I click on "Move to here" "link" in the "//tbody//tr[position()=last()-3]" "xpath_element"
@@ -226,7 +227,7 @@ Feature: We can understand the gradebook user report
       | Test assignment four                      | 33.33 %                 | 10.00  | 1.11 %                       |
       | Test assignment five                      | 33.33 %                 | 70.00  | 7.78 %                       |
       | Test assignment six                       | 33.33 %                 | 30.00  | 3.33 %                       |
-      | Sub category totalWeighted mean of grades.| 33.33 %                 | 36.67  | -                            |
+      | Sub category total                        | 33.33 %                 | 36.67  | -                            |
       | Course total                              | -                       | 156.67 | -                            |
 
   @javascript @skip_chrome_zerosize

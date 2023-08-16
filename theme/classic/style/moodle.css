@@ -22861,9 +22861,19 @@ a.text-dark:hover, a.text-dark:focus {
 .dir-rtl .custom-select {
   background-position: 0.75rem center;
 }
-
 .dir-rtl .custom-switch .custom-control-input:checked ~ .custom-control-label::after {
   transform: translateX(-0.75rem);
+}
+.dir-rtl .tooltip.bs-tooltip-left .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=left] .arrow, .dir-rtl .tooltip.bs-tooltip-right .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=right] .arrow {
+  transform: rotate(180deg);
+}
+.dir-rtl .tooltip.bs-tooltip-left .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=left] .arrow {
+  left: auto;
+  right: 0;
+}
+.dir-rtl .tooltip.bs-tooltip-right .arrow, .dir-rtl .tooltip.bs-tooltip-auto[x-placement^=right] .arrow {
+  left: 0;
+  right: auto;
 }
 
 /**
@@ -23235,6 +23245,19 @@ img.resize {
 .action-menu {
   white-space: nowrap;
   display: inline;
+}
+.action-menu .dropdown.downleft .dropdown-subpanel-content {
+  right: 0;
+  left: auto;
+}
+.action-menu .dropdown-subpanel.content-displayed {
+  background-color: #e9ecef;
+}
+.action-menu .dropdown-subpanel-content {
+  max-width: 300px;
+}
+.action-menu .dropdown-subpanel-content a:focus {
+  outline: solid #0f6cbf;
 }
 
 .block img.resize {
@@ -25448,6 +25471,20 @@ input[disabled] {
     width: 300px;
   }
 }
+/*
+ * Helpers to show elements only when a parent element has focus or hover.
+ */
+.v-parent-focus {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.focus-control:focus-within .v-parent-focus,
+.focus-control:hover .v-parent-focus {
+  opacity: 1;
+  visibility: visible;
+}
+
 .emoji-picker {
   width: 350px;
   height: 400px;
@@ -25848,9 +25885,17 @@ body.dragging .dragging {
   width: 9px;
 }
 
+.dir-rtl .dropleft .dropdown-toggle::before {
+  content: "\f054";
+}
+
 .dropright .dropdown-toggle::after {
   border: 0;
   content: "\f054";
+}
+
+.dir-rtl .dropright .dropdown-toggle::after {
+  content: "\f053";
 }
 
 .dropup .dropdown-toggle::after {
@@ -25960,6 +26005,40 @@ blockquote {
   margin: 0;
 }
 
+/* Combobox search dropdowns */
+.usersearchdropdown,
+.gradesearchdropdown,
+.groupsearchdropdown {
+  max-width: 350px;
+}
+.usersearchdropdown .searchresultitemscontainer,
+.gradesearchdropdown .searchresultitemscontainer,
+.groupsearchdropdown .searchresultitemscontainer {
+  max-height: 170px;
+  overflow: auto;
+  /* stylelint-disable declaration-no-important */
+}
+.usersearchdropdown .searchresultitemscontainer img,
+.gradesearchdropdown .searchresultitemscontainer img,
+.groupsearchdropdown .searchresultitemscontainer img {
+  height: 48px !important;
+  width: 48px !important;
+}
+
+/* Choice list component. */
+.choicelist {
+  min-width: 300px;
+}
+
+[data-region=fixed-drawer] .choicelist {
+  min-width: calc(300px - 25px);
+}
+
+@media (max-width: 575.98px) {
+  .choicelist {
+    min-width: calc(300px - 25px);
+  }
+}
 .icon {
   font-size: 16px;
   width: 16px;
@@ -28637,6 +28716,9 @@ span.editinstructions .alert-link {
   border-left: calc(1px + 5px) solid #0f6cbf;
   padding-left: calc(1.25rem - 5px);
 }
+#course-category-listings .listitem:hover {
+  z-index: 2;
+}
 #course-category-listings .item-actions {
   margin-right: 1em;
   display: inline-block;
@@ -28930,6 +29012,7 @@ span.editinstructions .alert-link {
 }
 
 /* Variables definition*/
+/* Functions/Mixins definition */
 /* Activity & Block 'add' buttons */
 .activity-add,
 .block-add {
@@ -29164,24 +29247,160 @@ span.editinstructions .alert-link {
   font-size: 0.875em;
   padding: 0;
 }
-.activity-item .activity-info {
+.activity-item .activity-completion {
   grid-area: completion;
   justify-self: end;
 }
-.activity-item .activity-info button,
-.activity-item .activity-info a[role=button] {
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
+.activity-item .activity-completion button.btn,
+.activity-item .activity-completion a[role=button].btn {
+  border: 1px solid #ced4da;
   font-weight: bold;
+  border-radius: 0.25rem;
+}
+.activity-item .activity-completion button.btn .icon,
+.activity-item .activity-completion a[role=button].btn .icon {
+  font-size: inherit;
+}
+.activity-item .activity-completion button.btn-primary,
+.activity-item .activity-completion a[role=button].btn-primary {
+  color: #0f6cbf;
+  background-color: #cfe2f2;
+  border-color: #cfe2f2;
+}
+.activity-item .activity-completion button.btn-primary hr,
+.activity-item .activity-completion a[role=button].btn-primary hr {
+  border-top-color: #bbd6ed;
+}
+.activity-item .activity-completion button.btn-primary .alert-link,
+.activity-item .activity-completion a[role=button].btn-primary .alert-link {
+  color: #0b5190;
+}
+.activity-item .activity-completion button.btn-secondary,
+.activity-item .activity-completion a[role=button].btn-secondary {
+  color: #ced4da;
+  background-color: #f5f6f8;
+  border-color: #f5f6f8;
+}
+.activity-item .activity-completion button.btn-secondary hr,
+.activity-item .activity-completion a[role=button].btn-secondary hr {
+  border-top-color: #e6e9ee;
+}
+.activity-item .activity-completion button.btn-secondary .alert-link,
+.activity-item .activity-completion a[role=button].btn-secondary .alert-link {
+  color: #b1bbc4;
+}
+.activity-item .activity-completion button.btn-success,
+.activity-item .activity-completion a[role=button].btn-success {
+  color: #357a32;
+  background-color: #d7e4d6;
+  border-color: #d7e4d6;
+}
+.activity-item .activity-completion button.btn-success hr,
+.activity-item .activity-completion a[role=button].btn-success hr {
+  border-top-color: #c8dac7;
+}
+.activity-item .activity-completion button.btn-success .alert-link,
+.activity-item .activity-completion a[role=button].btn-success .alert-link {
+  color: #255623;
+}
+.activity-item .activity-completion button.btn-info,
+.activity-item .activity-completion a[role=button].btn-info {
+  color: #008196;
+  background-color: #cce6ea;
+  border-color: #cce6ea;
+}
+.activity-item .activity-completion button.btn-info hr,
+.activity-item .activity-completion a[role=button].btn-info hr {
+  border-top-color: #badde3;
+}
+.activity-item .activity-completion button.btn-info .alert-link,
+.activity-item .activity-completion a[role=button].btn-info .alert-link {
+  color: #005563;
+}
+.activity-item .activity-completion button.btn-warning,
+.activity-item .activity-completion a[role=button].btn-warning {
+  color: #f0ad4e;
+  background-color: #fcefdc;
+  border-color: #fcefdc;
+}
+.activity-item .activity-completion button.btn-warning hr,
+.activity-item .activity-completion a[role=button].btn-warning hr {
+  border-top-color: #fae4c5;
+}
+.activity-item .activity-completion button.btn-warning .alert-link,
+.activity-item .activity-completion a[role=button].btn-warning .alert-link {
+  color: #ec971f;
+}
+.activity-item .activity-completion button.btn-danger,
+.activity-item .activity-completion a[role=button].btn-danger {
+  color: #ca3120;
+  background-color: #f4d6d2;
+  border-color: #f4d6d2;
+}
+.activity-item .activity-completion button.btn-danger hr,
+.activity-item .activity-completion a[role=button].btn-danger hr {
+  border-top-color: #efc3be;
+}
+.activity-item .activity-completion button.btn-danger .alert-link,
+.activity-item .activity-completion a[role=button].btn-danger .alert-link {
+  color: #9e2619;
+}
+.activity-item .activity-completion button.btn-light,
+.activity-item .activity-completion a[role=button].btn-light {
+  color: #f8f9fa;
+  background-color: #fefefe;
+  border-color: #fefefe;
+}
+.activity-item .activity-completion button.btn-light hr,
+.activity-item .activity-completion a[role=button].btn-light hr {
+  border-top-color: #f1f1f1;
+}
+.activity-item .activity-completion button.btn-light .alert-link,
+.activity-item .activity-completion a[role=button].btn-light .alert-link {
+  color: #dae0e5;
+}
+.activity-item .activity-completion button.btn-dark,
+.activity-item .activity-completion a[role=button].btn-dark {
+  color: #343a40;
+  background-color: #d6d8d9;
+  border-color: #d6d8d9;
+}
+.activity-item .activity-completion button.btn-dark hr,
+.activity-item .activity-completion a[role=button].btn-dark hr {
+  border-top-color: #c9cbcd;
+}
+.activity-item .activity-completion button.btn-dark .alert-link,
+.activity-item .activity-completion a[role=button].btn-dark .alert-link {
+  color: #1d2124;
 }
 @media (max-width: 575.98px) {
-  .activity-item .activity-info {
+  .activity-item .activity-completion {
     width: 100%;
     margin-top: 0.5rem;
   }
-  .activity-item .activity-info button {
+  .activity-item .activity-completion button {
     width: 100%;
   }
+}
+.activity-item .activity-completion .completion-dialog {
+  color: #495057;
+  font-size: 0.8203125rem;
+  min-width: 12rem;
+}
+.activity-item .activity-completion .completion-dialog .icon {
+  font-size: 0.8203125rem;
+  width: 0.8203125rem;
+  height: 0.8203125rem;
+  margin-right: 0.25rem;
+}
+.activity-item .activity-completion .completion-dialog .editcompletion a {
+  border-radius: 0.25rem;
+  color: #495057;
+  font-weight: bold;
+  text-decoration: none;
+}
+.activity-item .activity-completion .completion-dialog .editcompletion a:hover {
+  background-color: #e9ecef;
 }
 .activity-item .activity-groupmode-info {
   grid-area: groupmode;
@@ -29279,20 +29498,6 @@ span.editinstructions .alert-link {
   display: none;
 }
 
-.automatic-completion-conditions .badge {
-  font-size: 80%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
-}
-.automatic-completion-conditions .badge .icon {
-  width: 0.7rem;
-  height: 0.7rem;
-  font-size: 0.7rem;
-}
-.automatic-completion-conditions .badge:first-child {
-  margin-top: 0;
-}
-
 /* Activity divider */
 .activity:focus-within + .activity div.divider button,
 .course-section-header:focus-within + .content .section .activity:first-child div.divider button,
@@ -29352,6 +29557,19 @@ span.editinstructions .alert-link {
     margin-left: 2rem;
   }
 }
+/* Activity completion */
+.defaultactivitycompletion-item a {
+  color: #000;
+  text-decoration: none;
+}
+.defaultactivitycompletion-item a img {
+  filter: invert(25%) sepia(86%) saturate(1158%) hue-rotate(189deg) brightness(104%) contrast(92%);
+}
+.defaultactivitycompletion-item .activityicon {
+  width: 32px;
+  height: 32px;
+}
+
 /* Anchor link offset fix. This makes hash links scroll 60px down to account for the fixed header. */
 :target {
   scroll-margin-top: 60px;
@@ -35259,6 +35477,18 @@ p.arrow_button {
   border-top: 1px solid #dee2e6;
   padding-top: 10px;
   font-size: 90%;
+}
+
+#fitem_id_submitbutton {
+  padding-right: 2em;
+}
+
+.gradestatus {
+  padding-top: 10px;
+}
+
+.gradestatus .icon {
+  margin-right: 1rem;
 }
 
 .columns-autoflow-1to1to1 {
