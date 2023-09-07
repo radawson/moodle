@@ -76,7 +76,7 @@ Feature: Course index depending on role
     And I am on "Course 1" course homepage with editing mode on
     And I hide section "2"
     And I open "Activity sample 3" actions menu
-    And I click on "Hide" "link" in the "Activity sample 3" activity
+    And I choose "Availability > Hide on course page" in the open action menu
     And I log out
     And I log in as "teacher1"
     When I am on "Course 1" course homepage
@@ -93,7 +93,7 @@ Feature: Course index depending on role
     And I am on "Course 1" course homepage with editing mode on
     And I hide section "2"
     And I open "Activity sample 3" actions menu
-    And I click on "Hide" "link" in the "Activity sample 3" activity
+    And I choose "Availability > Hide on course page" in the open action menu
     And I log out
     And I log in as "student1"
     When I am on "Course 1" course homepage
@@ -181,6 +181,35 @@ Feature: Course index depending on role
     And I should see "Topic 1" in the "courseindex-content" "region"
     And I should see "Activity sample 1" in the "courseindex-content" "region"
     And I should see "Second activity in section 1" in the "courseindex-content" "region"
+    And I should see "Topic 2" in the "courseindex-content" "region"
+    And I should see "Activity sample 2" in the "courseindex-content" "region"
+    And I should see "Topic 3" in the "courseindex-content" "region"
+    And I should see "Activity sample 3" in the "courseindex-content" "region"
+
+  @javascript
+  Scenario: Course index toggling all sections
+    When I am on the "Course 1" course page logged in as teacher1
+    # Sections should be opened by default.
+    Then I should see "Topic 1" in the "courseindex-content" "region"
+    And I should see "Activity sample 1" in the "courseindex-content" "region"
+    And I should see "Topic 2" in the "courseindex-content" "region"
+    And I should see "Activity sample 2" in the "courseindex-content" "region"
+    And I should see "Topic 3" in the "courseindex-content" "region"
+    And I should see "Activity sample 3" in the "courseindex-content" "region"
+    # Collapse all sections
+    And I click on "Course index options" "button" in the "#courseindexdrawercontrols" "css_element"
+    And I click on "Collapse all" "link" in the "#courseindexdrawercontrols" "css_element"
+    And I should see "Topic 1" in the "courseindex-content" "region"
+    And I should not see "Activity sample 1" in the "courseindex-content" "region"
+    And I should see "Topic 2" in the "courseindex-content" "region"
+    And I should not see "Activity sample 2" in the "courseindex-content" "region"
+    And I should see "Topic 3" in the "courseindex-content" "region"
+    And I should not see "Activity sample 3" in the "courseindex-content" "region"
+    # Expand all sections
+    And I click on "Course index options" "button" in the "#courseindexdrawercontrols" "css_element"
+    And I click on "Expand all" "link" in the "#courseindexdrawercontrols" "css_element"
+    And I should see "Topic 1" in the "courseindex-content" "region"
+    And I should see "Activity sample 1" in the "courseindex-content" "region"
     And I should see "Topic 2" in the "courseindex-content" "region"
     And I should see "Activity sample 2" in the "courseindex-content" "region"
     And I should see "Topic 3" in the "courseindex-content" "region"

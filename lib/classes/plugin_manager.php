@@ -1871,6 +1871,11 @@ class core_plugin_manager {
                 'paypal', 'self', 'fee',
             ),
 
+            'factor' => [
+                'admin', 'auth', 'capability', 'cohort',  'email', 'grace', 'iprange', 'nosetup', 'role',
+                'token', 'totp', 'webauthn',
+            ],
+
             'filter' => array(
                 'activitynames', 'algebra', 'emailprotect',
                 'emoticon', 'displayh5p', 'mathjaxloader', 'mediaplugin', 'multilang', 'tex', 'tidy',
@@ -2036,7 +2041,10 @@ class core_plugin_manager {
                 'h5p',
                 'media',
                 'recordrtc',
-                'link'
+                'link',
+                'html',
+                'noautolink',
+                'premium',
             ],
 
             'theme' => array(
@@ -2049,7 +2057,7 @@ class core_plugin_manager {
                 'installaddon', 'langimport', 'licensemanager', 'log', 'lp', 'lpimportcsv', 'lpmigrate', 'messageinbound',
                 'mobile', 'moodlenet', 'multilangupgrade', 'monitor', 'oauth2', 'phpunit', 'policy', 'profiling', 'recyclebin',
                 'replace', 'spamcleaner', 'task', 'templatelibrary', 'uploadcourse', 'uploaduser', 'unsuproles',
-                'usertours', 'xmldb'
+                'usertours', 'xmldb', 'mfa'
             ),
 
             'webservice' => array(

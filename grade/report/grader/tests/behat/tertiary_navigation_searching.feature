@@ -1,4 +1,4 @@
-@core @javascript @gradereport @gradereport_grader
+@core @core_grades @javascript @gradereport @gradereport_grader
 Feature: Within the grader report, test that we can search for users
   In order to find specific users in the course gradebook
   As a teacher
@@ -16,7 +16,6 @@ Feature: Within the grader report, test that we can search for users
       | student3 | User      | Example  | student3@example.com | s3       | 3243249087 | 0875421745 | ABC2       | ABCD        | Olney   | GB       |
       | student4 | User      | Test     | student4@example.com | s4       | 0987532523 | 2149871323 | ABC3       | ABCD        | Tokyo   | JP       |
       | student5 | Turtle    | Manatee  | student5@example.com | s5       | 1239087780 | 9873623589 | ABC3       | ABCD        | Perth   | AU       |
-    # Note: Add groups etc so we can test that the search ignores those filters as well if we go down the filter dataset path.
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
@@ -25,14 +24,19 @@ Feature: Within the grader report, test that we can search for users
       | student3 | C1     | student        |
       | student4 | C1     | student        |
       | student5 | C1     | student        |
+    And the following "groups" exist:
+      | name          | course | idnumber |
+      | Default group | C1     | dg       |
+    And the following "group members" exist:
+      | user     | group |
+      | student5 | dg    |
     And the following "activities" exist:
       | activity | course | idnumber | name                |
       | assign   | C1     | a1       | Test assignment one |
     And the following config values are set as admin:
       | showuseridentity | idnumber,email,city,country,phone1,phone2,department,institution |
-    And I am on the "Course 1" "Course" page logged in as "teacher1"
+    And I am on the "Course 1" "grades > Grader report > View" page logged in as "teacher1"
     And I change window size to "large"
-    And I navigate to "View > Grader report" in the course gradebook
 
   Scenario: A teacher can view and trigger the user search
     # Check the placeholder text
@@ -231,9 +235,8 @@ Feature: Within the grader report, test that we can search for users
 
   @accessibility
   Scenario: A teacher can set focus and search using the input are with a keyboard
-    Given I press the tab key
+    Given I set the field "Search users" to "ABC"
     And the focused element is "Search users" "field"
-    And I set the field "Search users" to "ABC"
     And I wait until "Turtle Manatee" "option_role" exists
     # Basic tests for the page.
     When the page should meet accessibility standards
@@ -316,6 +319,28 @@ Feature: Within the grader report, test that we can search for users
     # Begin the search checking if we are adhering the filters.
     When I set the field "Search users" to "Turtle"
     Then I confirm "Turtle Manatee" in "user" search within the gradebook widget does not exist
+
+  Scenario: A teacher can reset the search and filters all at once
+    Given I set the field "Search users" to "Turtle"
+    And I click on "Turtle Manatee" "option_role"
+    And I wait until the page is ready
+    And the following should exist in the "user-grades" table:
+      | -1-                |
+      | Turtle Manatee     |
+    And I click on "Filter by name" "combobox"
+    And I select "T" in the "First name" "core_grades > initials bar"
+    And I select "M" in the "Last name" "core_grades > initials bar"
+    And the following should exist in the "user-grades" table:
+      | -1-                |
+      | Turtle Manatee     |
+    And I click on "Default group" in the "group" search widget
+    And the following should exist in the "user-grades" table:
+      | -1-                |
+      | Turtle Manatee     |
+    And I wait until the page is ready
+    When I click on "Clear all" "link" in the ".tertiary-navigation" "css_element"
+    And I wait until the page is ready
+    Then the field "Search users" matches value ""
 
   Scenario: As a teacher I can dynamically find users whilst ignoring pagination
     Given "42" "users" exist with the following data:

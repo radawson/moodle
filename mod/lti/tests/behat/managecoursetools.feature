@@ -59,6 +59,17 @@ Feature: Manage course tools
     When I navigate to "LTI External tools" in current page administration
     Then "You don't have permission to edit this tool" "icon" should exist in the "Test tool" "table_row"
 
+  Scenario: Viewing course tools with the capability to add/edit and without the capability to use
+    Given the following "role capability" exists:
+      | role                             | editingteacher |
+      | mod/lti:addcoursetool            | allow          |
+      | mod/lti:addpreconfiguredinstance | prohibit       |
+    And the following "mod_lti > course tools" exist:
+      | name      | description         | baseurl                  | course |
+      | Test tool | Example description | https://example.com/tool | C1     |
+    When I am on the "Course 1" course page logged in as teacher1
+    Then "LTI External tools" "link" should not exist in current page administration
+
   @javascript
   Scenario: Edit a course tool
     Given the following "mod_lti > course tools" exist:
@@ -107,12 +118,32 @@ Feature: Manage course tools
     And I navigate to "LTI External tools" in current page administration
     When I open the action menu in "Test tool" "table_row"
     And I choose "Delete" in the open action menu
-    Then I should see "Are you sure you want to delete this course tool?"
-    And I click on "Cancel" "button" in the "Delete a course tool" "dialogue"
+    Then I should see "This will delete Test tool from the available LTI tools in your course."
+    And I click on "Cancel" "button" in the "Delete Test tool" "dialogue"
     And I should see "Test tool" in the "reportbuilder-table" "table"
     And I open the action menu in "Test tool" "table_row"
     And I choose "Delete" in the open action menu
-    And I should see "Are you sure you want to delete this course tool?"
-    And I click on "Delete" "button" in the "Delete a course tool" "dialogue"
-    And I should see "Course tool deleted"
+    And I should see "This will delete Test tool from the available LTI tools in your course."
+    And I click on "Delete" "button" in the "Delete Test tool" "dialogue"
+    And I should see "Test tool removed"
     And I should not see "Test tool" in the "reportbuilder-table" "table"
+
+  @javascript
+  Scenario: Add a course tool using a cartridge URL
+    Given I am on the "Course 1" course page logged in as teacher1
+    And I navigate to "LTI External tools" in current page administration
+    When I click on "Add tool" "link"
+    And I set the following fields to these values:
+      | Tool name        | Test tool 1             |
+      | Tool description | Test tool 1 description |
+    And I set the field "Tool URL" to local url "/mod/lti/tests/fixtures/ims_cartridge_basic_lti_link.xml"
+    And I press "Save changes"
+    Then I should see "Test tool 1" in the "reportbuilder-table" "table"
+    # The cartridge description, if set, overrides the description set in the type edit form (bug?).
+    And I should see "Example tool description" in the "Test tool 1" "table_row"
+    And I open the action menu in "Test tool 1" "table_row"
+    And I choose "Edit" in the open action menu
+    And the field "Tool name" matches value "Test tool 1"
+    And the field "Tool URL" matches value "http://www.example.com/lti/provider.php"
+    And the field "Icon URL" matches value "http://download.moodle.org/unittest/test.jpg"
+    And the field "Secure icon URL" matches value "https://download.moodle.org/unittest/test.jpg"
