@@ -501,6 +501,17 @@ All rights reserved.</copyright>
       <copyright>2016 Federico Zivolo and contributors</copyright>
     </copyrights>
   </library>
+    <library>
+    <location>amd/src/popper2.js</location>
+    <name>Popper.js</name>
+    <description>A kickass library used to created Poppers in web applications.</description>
+    <version>v2.11.8</version>
+    <license>MIT</license>
+    <repository>https://github.com/floating-ui/floating-ui</repository>
+    <copyrights>
+      <copyright>2016 Federico Zivolo and contributors</copyright>
+    </copyrights>
+  </library>
   <library>
     <location>geopattern-php</location>
     <name>GeoPattern</name>
@@ -704,5 +715,25 @@ All rights reserved.</copyright>
       <version>2.0.1</version>
       <license>MIT</license>
       <repository>https://github.com/lbuchs/WebAuthn</repository>
+  </library>
+  <library>
+    <location>aws-sdk</location>
+    <name>AWS SDK for PHP</name>
+    <description>The AWS SDK for PHP library</description>
+    <version>3.277.11</version>
+    <license>Apache</license>
+    <licenseversion>2.0</licenseversion>
+    <repository>https://github.com/aws/aws-sdk-php</repository>
+  </library>
+  <library>
+    <location>jmespath</location>
+    <name>JMESPath</name>
+    <description>The JMESPath library</description>
+    <version>2.6.1</version>
+    <license>MIT</license>
+    <repository>https://github.com/jmespath/jmespath.php</repository>
+    <copyrights>
+      <copyright>2014 Michael Dowling, https://github.com/mtdowling</copyright>
+    </copyrights>
   </library>
 </libraries>

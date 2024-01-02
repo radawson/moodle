@@ -93,6 +93,7 @@ devicedetectregexexpression,core_admin
 devicedetectregexvalue,core_admin
 modshowcmtitle,core
 makeavailablecmtitle,core
+filterdurationunit,core_reportbuilder
 dateintervaldayshoursmins,core_langconfig
 completiondefault,core_completion
 configcompletiondefault,core_completion
@@ -104,3 +105,17 @@ activitygradenotrequired,core_completion
 completionpassgrade_help,core_completion
 completionusegrade_help,core_completion
 moodlenet:sharetyperesource,core
+emailpasswordsent,core
+passwordsent,core
+passwordsenttext,core
+passwordrecovery,core
+passwordconfirmchange,core
+passwordnohelp,core
+grade,core_grades
+taskdeletecachetext,core_admin
+themesettings,core_admin
+copycourseheading,core_backup
+backupcourse,core_backup
+linkcoursesections,core_admin
+linkcoursesections_help,core_admin
+showallusers,core

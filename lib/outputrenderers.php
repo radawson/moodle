@@ -1837,6 +1837,59 @@ class core_renderer extends renderer_base {
     }
 
     /**
+     * Renders a full check API result including summary and details
+     *
+     * @param core\check\check $check the check that was run to get details from
+     * @param core\check\result $result the result of a check
+     * @param bool $includedetails if true, details are included as well
+     * @return string rendered html
+     */
+    protected function render_check_full_result(core\check\check $check, core\check\result $result, bool $includedetails): string {
+        // Initially render just badge itself.
+        $renderedresult = $this->render_from_template($result->get_template_name(), $result->export_for_template($this));
+
+        // Add summary.
+        $renderedresult .= ' ' . $result->get_summary();
+
+        // Wrap in notificaiton.
+        $notificationmap = [
+            \core\check\result::NA => \core\output\notification::NOTIFY_INFO,
+            \core\check\result::OK => \core\output\notification::NOTIFY_SUCCESS,
+            \core\check\result::INFO => \core\output\notification::NOTIFY_INFO,
+            \core\check\result::UNKNOWN => \core\output\notification::NOTIFY_WARNING,
+            \core\check\result::WARNING => \core\output\notification::NOTIFY_WARNING,
+            \core\check\result::ERROR => \core\output\notification::NOTIFY_ERROR,
+            \core\check\result::CRITICAL => \core\output\notification::NOTIFY_ERROR,
+        ];
+
+        // Get type, or default to error.
+        $notificationtype = $notificationmap[$result->get_status()] ?? \core\output\notification::NOTIFY_ERROR;
+        $renderedresult = $this->notification($renderedresult, $notificationtype, false);
+
+        // If adding details, add on new line.
+        if ($includedetails) {
+            $renderedresult .= $result->get_details();
+        }
+
+        // Add the action link.
+        $renderedresult .= $this->render_action_link($check->get_action_link());
+
+        return $renderedresult;
+    }
+
+    /**
+     * Renders a full check API result including summary and details
+     *
+     * @param core\check\check $check the check that was run to get details from
+     * @param core\check\result $result the result of a check
+     * @param bool $includedetails if details should be included
+     * @return string HTML fragment
+     */
+    public function check_full_result(core\check\check $check, core\check\result $result, bool $includedetails = false) {
+        return $this->render_check_full_result($check, $result, $includedetails);
+    }
+
+    /**
      * Renders a Check API result
      *
      * @param core\check\result $result
@@ -2731,8 +2784,12 @@ class core_renderer extends renderer_base {
 
         // Get the image html output first, auto generated based on initials if one isn't already set.
         if ($user->picture == 0 && empty($CFG->enablegravatar) && !defined('BEHAT_SITE_RUNNING')) {
-            $output = html_writer::tag('span', mb_substr($user->firstname, 0, 1) . mb_substr($user->lastname, 0, 1),
-                ['class' => 'userinitials size-' . $size]);
+            $initials = \core_user::get_initials($user);
+            // Don't modify in corner cases where neither the firstname nor the lastname appears.
+            $output = html_writer::tag(
+                'span', $initials,
+                ['class' => 'userinitials size-' . $size]
+            );
         } else {
             $output = html_writer::empty_tag('img', $attributes);
         }
@@ -3847,8 +3904,7 @@ EOD;
     /**
      * Returns the custom menu if one has been set
      *
-     * A custom menu can be configured by browsing to
-     *    Settings: Administration > Appearance > Themes > Theme settings
+     * A custom menu can be configured by browsing to a theme's settings page
      * and then configuring the custommenu config setting as described.
      *
      * Theme developers: DO NOT OVERRIDE! Please override function

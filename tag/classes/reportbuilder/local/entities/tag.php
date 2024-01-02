@@ -38,12 +38,14 @@ use core_reportbuilder\local\report\{column, filter};
 class tag extends base {
 
     /**
-     * Database tables that this entity uses and their default aliases
+     * Database tables that this entity uses
      *
-     * @return array
+     * @return string[]
      */
-    protected function get_default_table_aliases(): array {
-        return ['tag' => 't'];
+    protected function get_default_tables(): array {
+        return [
+            'tag',
+        ];
     }
 
     /**
@@ -171,8 +173,8 @@ class tag extends base {
         ))
             ->add_joins($this->get_joins())
             ->set_type(column::TYPE_BOOLEAN)
-            ->add_fields("{$tagalias}.flag")
-            ->set_is_sortable(true)
+            ->add_field("CASE WHEN {$tagalias}.flag > 0 THEN 1 ELSE {$tagalias}.flag END", 'flag')
+            ->set_is_sortable(true, ["{$tagalias}.flag"])
             ->add_callback([format::class, 'boolean_as_text']);
 
         // Time modified.
@@ -224,7 +226,7 @@ class tag extends base {
             'flagged',
             new lang_string('flagged', 'core_tag'),
             $this->get_entity_name(),
-            "{$tagalias}.flag"
+            "CASE WHEN {$tagalias}.flag > 0 THEN 1 ELSE {$tagalias}.flag END"
         ))
             ->add_joins($this->get_joins());
 

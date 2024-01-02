@@ -352,7 +352,8 @@ body.path-question-type {
     }
 }
 
-.path-mod-quiz input[size] {
+.que input[size],
+.que textarea[cols] {
     width: auto;
     max-width: 100%;
 }
@@ -664,13 +665,6 @@ body.path-question-type .mform fieldset.hidden {
 
 .tag-condition-container {
     position: relative;
-}
-
-// qbank_managecategories
-[data-filterregion=filter][data-filter-type=category] .form-autocomplete-suggestions li[aria-disabled=true] {
-    font-weight: bold;
-    color: $body-color;
-    background-color: $body-bg;
 }
 
 @include media-breakpoint-down(sm) {

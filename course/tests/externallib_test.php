@@ -1179,7 +1179,14 @@ class externallib_test extends externallib_advanced_testcase {
                 $this->assertEmpty($module['afterlink']);
                 $this->assertEquals('1 unread post', $module['activitybadge']['badgecontent']);
                 $this->assertEquals('badge-dark', $module['activitybadge']['badgestyle']);
-
+                $this->assertEquals(
+                    plugin_supports(
+                        'mod',
+                        'forum',
+                        FEATURE_MOD_PURPOSE,
+                        MOD_PURPOSE_OTHER
+                    ), $module['purpose']
+                );
                 $testexecuted = $testexecuted + 2;
             } else if ($module['id'] == $labelcm->id and $module['modname'] == 'label') {
                 $cm = $modinfo->cms[$labelcm->id];
@@ -1191,17 +1198,41 @@ class externallib_test extends externallib_advanced_testcase {
                 $this->assertTrue($module['noviewlink']);
                 $this->assertNotEmpty($module['description']);  // Label always prints the description.
                 $testexecuted = $testexecuted + 1;
+                $this->assertEquals(
+                    plugin_supports(
+                        'mod',
+                        'label',
+                        FEATURE_MOD_PURPOSE,
+                        MOD_PURPOSE_OTHER
+                    ), $module['purpose']
+                );
             } else if ($module['id'] == $datacm->id and $module['modname'] == 'data') {
                 $this->assertStringContainsString('customcompletionrules', $module['customdata']);
                 $this->assertFalse($module['noviewlink']);
                 $this->assertArrayNotHasKey('description', $module);
                 $testexecuted = $testexecuted + 1;
+                $this->assertEquals(
+                    plugin_supports(
+                        'mod',
+                        'data',
+                        FEATURE_MOD_PURPOSE,
+                        MOD_PURPOSE_OTHER
+                    ), $module['purpose']
+                );
             } else if ($module['instance'] == $resource->id && $module['modname'] == 'resource') {
                 // Resources have both, afterlink for the size and the update date and activitybadge for the file type.
                 $this->assertStringContainsString('32 bytes', $module['afterlink']);
                 $this->assertEquals('TXT', $module['activitybadge']['badgecontent']);
                 $this->assertEquals('badge-none', $module['activitybadge']['badgestyle']);
                 $testexecuted = $testexecuted + 1;
+                $this->assertEquals(
+                    plugin_supports(
+                        'mod',
+                        'resource',
+                        FEATURE_MOD_PURPOSE,
+                        MOD_PURPOSE_OTHER
+                    ), $module['purpose']
+                );
             }
         }
         foreach ($sections[2]['modules'] as $module) {
@@ -3027,6 +3058,53 @@ class externallib_test extends externallib_advanced_testcase {
             'value' => userdate(1580389200),
             'valueraw' => 1580389200,
         ], reset($course['customfields']));
+    }
+
+    /**
+     * Test retrieving courses by field returning communication tools.
+     * @covers \core_course_external::get_courses_by_field
+     */
+    public function test_get_courses_by_field_communication(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        // Create communication tool in course.
+        set_config('enablecommunicationsubsystem', 1);
+
+        $roomname = 'Course chat';
+        $telegramlink = 'https://my.telegram.chat/120';
+        $record = [
+            'selectedcommunication' => 'communication_customlink',
+            'communicationroomname' => $roomname,
+            'customlinkurl' => $telegramlink,
+        ];
+        $course = $this->getDataGenerator()->create_course($record);
+        $communication = \core_communication\api::load_by_instance(
+            context: \core\context\course::instance($course->id),
+            component: 'core_course',
+            instancetype: 'coursecommunication',
+            instanceid: $course->id,
+        );
+
+        $result = external_api::clean_returnvalue(
+            core_course_external::get_courses_by_field_returns(),
+            core_course_external::get_courses_by_field('id', $course->id)
+        );
+
+        $course = reset($result['courses']);
+        $this->assertEquals($roomname, $course['communicationroomname']);
+        $this->assertEquals($telegramlink, $course['communicationroomurl']);
+
+        // Course without comm tools.
+        $course = $this->getDataGenerator()->create_course();
+        $result = external_api::clean_returnvalue(
+            core_course_external::get_courses_by_field_returns(),
+            core_course_external::get_courses_by_field('id', $course->id)
+        );
+
+        $course = reset($result['courses']);
+        $this->assertNotContains('communicationroomname', $course);
+        $this->assertNotContains('communicationroomurl', $course);
     }
 
     public function test_get_courses_by_field_invalid_field() {

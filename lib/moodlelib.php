@@ -4113,8 +4113,10 @@ function delete_user(stdClass $user) {
                 instancetype: 'coursecommunication',
                 instanceid: $course->id,
             );
-            $communication->get_room_user_provider()->remove_members_from_room([$user->id]);
-            $communication->delete_instance_user_mapping([$user->id]);
+            if ($communication !== null) {
+                $communication->get_room_user_provider()->remove_members_from_room([$user->id]);
+                $communication->delete_instance_user_mapping([$user->id]);
+            }
         }
     }
 
@@ -5046,7 +5048,7 @@ function get_complete_user_data($field, $value, $mnethostid = null, $throwexcept
 function check_password_policy($password, &$errmsg, $user = null) {
     global $CFG;
 
-    if (!empty($CFG->passwordpolicy)) {
+    if (!empty($CFG->passwordpolicy) && !isguestuser($user)) {
         $errmsg = '';
         if (core_text::strlen($password) < $CFG->minpasswordlength) {
             $errmsg .= '<div>'. get_string('errorminpasswordlength', 'auth', $CFG->minpasswordlength) .'</div>';
@@ -8182,18 +8184,7 @@ function plugin_callback($type, $name, $feature, $action, $params = null, $defau
  * @return mixed
  */
 function component_callback($component, $function, array $params = array(), $default = null, bool $migratedtohook = false) {
-
     $functionname = component_callback_exists($component, $function);
-
-    if ($params && (array_keys($params) !== range(0, count($params) - 1))) {
-        // PHP 8 allows to have associative arrays in the call_user_func_array() parameters but
-        // PHP 7 does not. Using associative arrays can result in different behavior in different PHP versions.
-        // See https://php.watch/versions/8.0/named-parameters#named-params-call_user_func_array
-        // This check can be removed when minimum PHP version for Moodle is raised to 8.
-        debugging('Parameters array can not be an associative array while Moodle supports both PHP 7 and PHP 8.',
-            DEBUG_DEVELOPER);
-        $params = array_values($params);
-    }
 
     if ($functionname) {
         if ($migratedtohook) {
@@ -10666,7 +10657,7 @@ function get_home_page() {
 function get_default_home_page(): int {
     global $CFG;
 
-    return !empty($CFG->enabledashboard) ? HOMEPAGE_MY : HOMEPAGE_MYCOURSES;
+    return (!isset($CFG->enabledashboard) || $CFG->enabledashboard) ? HOMEPAGE_MY : HOMEPAGE_MYCOURSES;
 }
 
 /**
@@ -11047,4 +11038,31 @@ function site_is_public() {
  */
 function exceeds_password_length(string $password, int $pepperlength = 0): bool {
     return (strlen($password) > (MAX_PASSWORD_CHARACTERS + $pepperlength));
+}
+
+/**
+ * A helper to replace PHP 8.3 usage of array_keys with two args.
+ *
+ * There is an indication that this will become a new method in PHP 8.4, but that has not happened yet.
+ * Therefore this non-polyfill has been created with a different naming convention.
+ * In the future it can be deprecated if a core PHP method is created.
+ *
+ * https://wiki.php.net/rfc/deprecate_functions_with_overloaded_signatures#array_keys
+ *
+ * @param array $array
+ * @param mixed $filter The value to filter on
+ * @param bool $strict Whether to apply a strit test with the filter
+ * @return array
+ */
+function moodle_array_keys_filter(array $array, mixed $filter, bool $strict = false): array {
+    return array_keys(array_filter(
+        $array,
+        function($value, $key) use ($filter, $strict): bool {
+            if ($strict) {
+                return $value === $filter;
+            }
+            return $value == $filter;
+        },
+        ARRAY_FILTER_USE_BOTH,
+    ));
 }

@@ -722,6 +722,16 @@ class grade_category extends grade_object {
 
         }
 
+        // First, check if all grades are null, because the final grade will be null
+        // even when aggreateonlygraded is true.
+        $allnull = true;
+        foreach ($grade_values as $v) {
+            if (!is_null($v)) {
+                $allnull = false;
+                break;
+            }
+        }
+
         // For items with no value, and not excluded - either set their grade to 0 or exclude them.
         foreach ($items as $itemid=>$value) {
             if (!isset($grade_values[$itemid]) and !in_array($itemid, $excluded)) {
@@ -789,9 +799,13 @@ class grade_category extends grade_object {
             $result['grademin'] = 0;
         }
 
-        // Recalculate the grade back to requested range.
-        $finalgrade = grade_grade::standardise_score($agg_grade, 0, 1, $result['grademin'], $result['grademax']);
-        $grade->finalgrade = $this->grade_item->bounded_grade($finalgrade);
+        if ($allnull) {
+            $grade->finalgrade = null;
+        } else {
+            // Recalculate the grade back to requested range.
+            $finalgrade = grade_grade::standardise_score($agg_grade, 0, 1, $result['grademin'], $result['grademax']);
+            $grade->finalgrade = $this->grade_item->bounded_grade($finalgrade);
+        }
 
         $oldrawgrademin = $grade->rawgrademin;
         $oldrawgrademax = $grade->rawgrademax;
@@ -1097,7 +1111,7 @@ class grade_category extends grade_object {
                 $freq = array_count_values($converted_grade_values);
                 arsort($freq);                      // sort by frequency keeping keys
                 $top = reset($freq);               // highest frequency count
-                $modes = array_keys($freq, $top);  // search for all modes (have the same highest count)
+                $modes = moodle_array_keys_filter($freq, $top);  // Search for all modes (have the same highest count).
                 rsort($modes, SORT_NUMERIC);       // get highest mode
                 $agg_grade = reset($modes);
                 // Record the weights as used.

@@ -228,6 +228,7 @@ $functions = array(
         'capabilities' => 'moodle/calendar:manageentries, moodle/calendar:manageownentries, moodle/calendar:managegroupentries',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+        'readonlysession' => true,
     ),
     'core_calendar_get_action_events_by_course' => array(
         'classname' => 'core_calendar_external',
@@ -304,6 +305,13 @@ $functions = array(
         'description' => 'Delete the calendar subscription',
         'type' => 'write',
         'ajax' => true
+    ],
+    'core_check_get_result_admintree' => [
+        'classname' => 'core\check\external\get_result_admintree',
+        'description' => 'Executes a check stored in the admin tree and returns the result',
+        'type' => 'read',
+        'ajax' => true,
+        'readonlysession' => true,
     ],
     'core_cohort_add_cohort_members' => array(
         'classname' => 'core_cohort_external',
@@ -669,6 +677,7 @@ $functions = array(
         'type' => 'read',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+        'readonlysession' => true,
     ),
     'core_course_get_recent_courses' => array(
         'classname' => 'core_course_external',
@@ -1013,6 +1022,13 @@ $functions = array(
         'description' => 'Get the grade tree structure for a course',
         'type' => 'read',
         'ajax' => true,
+    ],
+    'core_grades_get_gradable_users' => [
+        'classname' => 'core_grades\external\get_gradable_users',
+        'description' => 'Returns the gradable users in a course',
+        'type' => 'read',
+        'ajax' => true,
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
     'core_grading_get_definitions' => array(
         'classname' => 'core_grading_external',
@@ -1477,6 +1493,7 @@ $functions = array(
         'capabilities' => 'moodle/site:sendmessage',
         'ajax' => true,
         'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE),
+        'readonlysession' => true,
     ),
     'core_message_send_messages_to_conversation' => array(
         'classname' => 'core_message_external',
