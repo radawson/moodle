@@ -164,7 +164,7 @@ class adhoc_task_test extends \advanced_testcase {
             return: 'attemptsavailable',
             conditions: ['id' => $taskid1]
         );
-        $this->assertNull(actual: $attemptsavailable);
+        $this->assertEquals(expected: manager::MAX_RETRY, actual: $attemptsavailable);
 
         // Get the task from the scheduler, execute it, and mark it as failed.
         $task = manager::get_next_adhoc_task(timestart: $now);
@@ -178,7 +178,7 @@ class adhoc_task_test extends \advanced_testcase {
             return: 'attemptsavailable',
             conditions: ['id' => $taskid1]
         );
-        $this->assertNull(actual: $attemptsavailable);
+        $this->assertEquals(expected: manager::MAX_RETRY - 1, actual: $attemptsavailable);
 
         // Create a no-retry adhoc task.
         $now = time();
@@ -347,6 +347,56 @@ class adhoc_task_test extends \advanced_testcase {
             expected: 0,
             actual: $DB->count_records(table: 'task_adhoc'),
         );
+    }
+
+    /**
+     * Test adhoc task failure will retain the time information.
+     *
+     * @covers ::queue_adhoc_task
+     * @covers ::get_next_adhoc_task
+     * @covers ::adhoc_task_failed
+     */
+    public function test_adhoc_task_failed_will_retain_time_info(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $now = time();
+        // Create an adhoc task.
+        $task = new adhoc_test_task();
+        // Queue it.
+        $taskid = manager::queue_adhoc_task(task: $task);
+
+        // Update the timecreated of the task to be older.
+        $DB->set_field(
+            table: 'task_adhoc',
+            newfield: 'timecreated',
+            newvalue: time() - DAYSECS,
+            conditions: ['id' => $taskid],
+        );
+
+        // Get the timecreated value before marking the task as failed.
+        $timecreatedbefore = $DB->get_field(
+            table: 'task_adhoc',
+            return: 'timecreated',
+            conditions: ['id' => $taskid],
+        );
+
+        // Get the task from the scheduler.
+        $task = manager::get_next_adhoc_task(timestart: $now);
+        // Execute the task.
+        $task->execute();
+        // Mark the task as failed.
+        manager::adhoc_task_failed(task: $task);
+
+        // Get the timecreated value after marking the task as failed.
+        $timecreatedafter = $DB->get_field(
+            table: 'task_adhoc',
+            return: 'timecreated',
+            conditions: ['id' => $taskid],
+        );
+
+        // The timecreated values should be the same.
+        $this->assertEquals($timecreatedbefore, $timecreatedafter);
     }
 
     /**

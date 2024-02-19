@@ -56,6 +56,11 @@ class manager {
     const ADHOC_TASK_FAILED_RETENTION = 4 * WEEKSECS;
 
     /**
+     * @var int Used for max retry.
+     */
+    const MAX_RETRY = 9;
+
+    /**
      * @var array A cached queue of adhoc tasks
      */
     public static $miniqueue;
@@ -236,7 +241,9 @@ class manager {
         }
 
         // Check if the task is allowed to be retried or not.
-        $record->attemptsavailable = $task->retry_until_success() ? null : 1;
+        $record->attemptsavailable = $task->retry_until_success() ? self::MAX_RETRY : 1;
+        // Set the time the task was created.
+        $record->timecreated = time();
 
         // Check if the same task is already scheduled.
         if ($checkforexisting && self::task_is_scheduled($task)) {
@@ -316,7 +323,6 @@ class manager {
         $record->faildelay = $task->get_fail_delay();
         $record->customdata = $task->get_custom_data_as_string();
         $record->userid = $task->get_userid();
-        $record->timecreated = time();
         $record->timestarted = $task->get_timestarted();
         $record->hostname = $task->get_hostname();
         $record->pid = $task->get_pid();
@@ -1128,7 +1134,7 @@ class manager {
         $task->set_pid();
         $task->set_next_run_time(time() + $delay);
         $task->set_fail_delay($delay);
-        if (!$task->retry_until_success() && $task->get_attempts_available() > 0) {
+        if ($task->get_attempts_available() > 0) {
             $task->set_attempts_available($task->get_attempts_available() - 1);
         }
         $record = self::record_from_adhoc_task($task);
@@ -1561,7 +1567,7 @@ class manager {
             2 => ['pipe', 'w'], // STDERR.
         ];
         flush();
-        $process = proc_open($command, $descriptorspec, $pipes, realpath('./'), []);
+        $process = proc_open($command, $descriptorspec, $pipes, realpath('./'));
         if (is_resource($process)) {
             while ($s = fgets($pipes[1])) {
                 mtrace($s, '');

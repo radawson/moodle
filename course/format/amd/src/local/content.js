@@ -61,6 +61,9 @@ export default class Component extends BaseComponent {
             ACTIVITYTAG: 'li',
             SECTIONTAG: 'li',
         };
+        this.selectorGenerators = {
+            cmNameFor: (id) => `[data-cm-name-for='${id}']`,
+        };
         // Default classes to toggle on refresh.
         this.classes = {
             COLLAPSED: `collapsed`,
@@ -76,7 +79,7 @@ export default class Component extends BaseComponent {
         this.sections = {};
         this.cms = {};
         // The page section return.
-        this.sectionReturn = descriptor.sectionReturn ?? 0;
+        this.sectionReturn = descriptor.sectionReturn ?? null;
         this.debouncedReloads = new Map();
     }
 
@@ -230,6 +233,7 @@ export default class Component extends BaseComponent {
             {watch: `cm.sectionid:updated`, handler: this._reloadCm},
             {watch: `cm.indent:updated`, handler: this._reloadCm},
             {watch: `cm.groupmode:updated`, handler: this._reloadCm},
+            {watch: `cm.name:updated`, handler: this._refreshCmName},
             // Update section number and title.
             {watch: `section.number:updated`, handler: this._refreshSectionNumber},
             // Collapse and expand sections.
@@ -243,6 +247,23 @@ export default class Component extends BaseComponent {
             // Reindex sections and cms.
             {watch: `state:updated`, handler: this._indexContents},
         ];
+    }
+
+    /**
+     * Update a course module name on the whole page.
+     *
+     * @param {object} param
+     * @param {Object} param.element details the update details.
+     */
+    _refreshCmName({element}) {
+        // Update classes.
+        // Replace the text content of the cm name.
+        const allCmNamesFor = this.getElements(
+            this.selectorGenerators.cmNameFor(element.id)
+        );
+        allCmNamesFor.forEach((cmNameFor) => {
+            cmNameFor.textContent = element.name;
+        });
     }
 
     /**
@@ -429,14 +450,14 @@ export default class Component extends BaseComponent {
      * Refresh the section list.
      *
      * @param {Object} param
-     * @param {Object} param.element details the update details.
+     * @param {Object} param.state the full state object.
      */
-    _refreshCourseSectionlist({element}) {
+    _refreshCourseSectionlist({state}) {
         // If we have a section return means we only show a single section so no need to fix order.
-        if (this.reactive.sectionReturn != 0) {
+        if (this.reactive.sectionReturn !== null) {
             return;
         }
-        const sectionlist = element.sectionlist ?? [];
+        const sectionlist = this.reactive.getExporter().listedSectionIds(state);
         const listparent = this.getElement(this.selectors.COURSE_SECTIONLIST);
         // For now section cannot be created at a frontend level.
         const createSection = this._createSectionItem.bind(this);
@@ -541,7 +562,7 @@ export default class Component extends BaseComponent {
                 {
                     id: cmId,
                     courseid: Config.courseId,
-                    sr: this.reactive.sectionReturn ?? 0,
+                    sr: this.reactive.sectionReturn ?? null,
                 }
             );
             promise.then((html, js) => {
@@ -608,7 +629,7 @@ export default class Component extends BaseComponent {
                 {
                     id: element.id,
                     courseid: Config.courseId,
-                    sr: this.reactive.sectionReturn ?? 0,
+                    sr: this.reactive.sectionReturn ?? null,
                 }
             );
             promise.then((html, js) => {
